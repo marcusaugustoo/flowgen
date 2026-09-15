@@ -81,8 +81,9 @@ class TestDeveloper:
 
     def test_code_extraction(self):
         """Test that code is extracted from markdown blocks."""
+        from src.agents.code_extractor import extract_code
         text = '```python\ndef foo():\n    return 42\n```\nSome explanation.'
-        code = Developer._extract_code(text)
+        code = extract_code(text)
         assert code == "def foo():\n    return 42"
 
     def test_refinement_mode(self, mock_llm_with_code, sample_context):

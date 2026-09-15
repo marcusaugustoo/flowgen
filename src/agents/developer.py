@@ -7,10 +7,10 @@ Also handles refinement when receiving failure reports.
 
 from __future__ import annotations
 
-import re
 from typing import Any, Optional
 
 from src.agents.base_agent import BaseAgent
+from src.agents.code_extractor import extract_code
 from src.llm.base import LLMResponse
 from src.orchestration.artifacts import Artifact
 from src.orchestration.context import SharedContext
@@ -44,7 +44,7 @@ class Developer(BaseAgent):
 
     def parse_response(self, response: LLMResponse, context: SharedContext) -> Artifact:
         """Parse the LLM response, extracting code from markdown blocks if present."""
-        code = self._extract_code(response.content)
+        code = extract_code(response.content)
 
         return Artifact(
             type=self.artifact_type,
@@ -63,27 +63,3 @@ class Developer(BaseAgent):
         """Store generated code in the shared context."""
         context.code = artifact.content
 
-    @staticmethod
-    def _extract_code(text: str) -> str:
-        """
-        Extract Python code from the LLM response.
-
-        Handles:
-        1. Code inside ```python ... ``` blocks
-        2. Code inside ``` ... ``` blocks
-        3. Raw code (returned as-is)
-        """
-        # Try to find python code blocks
-        pattern = r"```python\s*\n(.*?)```"
-        matches = re.findall(pattern, text, re.DOTALL)
-        if matches:
-            return "\n".join(matches).strip()
-
-        # Try generic code blocks
-        pattern = r"```\s*\n(.*?)```"
-        matches = re.findall(pattern, text, re.DOTALL)
-        if matches:
-            return "\n".join(matches).strip()
-
-        # Return as-is (might be raw code)
-        return text.strip()

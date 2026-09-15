@@ -76,7 +76,9 @@ class SharedContext:
             context["requirements"] = self.requirements
             context["design"] = self.design
             if self.failure_reports:
-                context["failure_reports"] = self.failure_reports
+                context["failure_reports"] = [
+                    _truncate_error_report(r) for r in self.failure_reports
+                ]
             if self.reviews:
                 context["reviews"] = self.reviews
 
@@ -155,3 +157,51 @@ class SharedContext:
         """Load context from JSON file."""
         with open(path, "r") as f:
             return cls.from_dict(json.load(f))
+
+
+# ── Helpers ─────────────────────────────────────────────────────────
+
+# Limite máximo de caracteres por relatório de falha enviado ao LLM.
+# Tracebacks enormes consomem tokens preciosos da janela de contexto
+# de SLMs (que costumam ter 4k-8k tokens).
+_MAX_REPORT_CHARS = 1500
+
+
+def _truncate_error_report(report: str) -> str:
+    """
+    Trunca um relatório de erro mantendo as partes mais informativas.
+
+    Estratégia:
+    - Se o relatório cabe dentro do limite, retorna como está.
+    - Caso contrário, mantém as primeiras linhas (contexto) e as
+      últimas linhas (a exceção final e o traceback mais relevante),
+      cortando o miolo com um indicador de truncamento.
+    """
+    if len(report) <= _MAX_REPORT_CHARS:
+        return report
+
+    lines = report.splitlines()
+
+    # Reserva ~40% para o início e ~60% para o final (o erro é mais importante)
+    head_budget = _MAX_REPORT_CHARS * 2 // 5
+    tail_budget = _MAX_REPORT_CHARS - head_budget
+
+    head_lines: list[str] = []
+    head_len = 0
+    for line in lines:
+        if head_len + len(line) + 1 > head_budget:
+            break
+        head_lines.append(line)
+        head_len += len(line) + 1
+
+    tail_lines: list[str] = []
+    tail_len = 0
+    for line in reversed(lines):
+        if tail_len + len(line) + 1 > tail_budget:
+            break
+        tail_lines.insert(0, line)
+        tail_len += len(line) + 1
+
+    truncation_marker = "\n... [TRUNCADO — relatório de erro reduzido para caber no contexto] ...\n"
+
+    return "\n".join(head_lines) + truncation_marker + "\n".join(tail_lines)

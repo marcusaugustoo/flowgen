@@ -6,10 +6,10 @@ Generates tests, executes them against the generated code, and produces failure 
 
 from __future__ import annotations
 
-import re
 from typing import Any
 
 from src.agents.base_agent import BaseAgent
+from src.agents.code_extractor import extract_code
 from src.llm.base import LLMResponse
 from src.orchestration.artifacts import Artifact
 from src.orchestration.context import SharedContext
@@ -47,7 +47,7 @@ class Tester(BaseAgent):
 
     def parse_response(self, response: LLMResponse, context: SharedContext) -> Artifact:
         """Parse the LLM response into a test artifact."""
-        test_code = self._extract_code(response.content)
+        test_code = extract_code(response.content)
 
         # Determine artifact type based on context
         if context.test_results:
@@ -74,17 +74,3 @@ class Tester(BaseAgent):
         elif artifact.type == "test_failure_report":
             context.failure_reports.append(artifact.content)
 
-    @staticmethod
-    def _extract_code(text: str) -> str:
-        """Extract Python code from the LLM response."""
-        pattern = r"```python\s*\n(.*?)```"
-        matches = re.findall(pattern, text, re.DOTALL)
-        if matches:
-            return "\n".join(matches).strip()
-
-        pattern = r"```\s*\n(.*?)```"
-        matches = re.findall(pattern, text, re.DOTALL)
-        if matches:
-            return "\n".join(matches).strip()
-
-        return text.strip()
