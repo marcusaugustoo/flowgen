@@ -1,6 +1,3 @@
-# Baseline A — Raw Model (single LLM call)
-# Overrides default.yaml values
-
 experiment:
   name: raw_baseline
 

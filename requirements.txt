@@ -1,11 +1,5 @@
-# Core dependencies
 pyyaml>=6.0
 requests>=2.31.0
 rich>=13.0.0
-
-# Development / Testing
 pytest>=7.4.0
 pytest-cov>=4.1.0
-
-# Optional: Ollama Python SDK (not strictly required - we use REST API)
-# ollama>=0.3.0

@@ -1,5 +1,5 @@
 """
-FlowGen 0.5b — Main entry point.
+FlowGen — Main entry point.
 
 Runs an experiment based on YAML configuration.
 
@@ -251,7 +251,7 @@ def run_experiment(config: ExperimentConfig) -> dict[str, Any]:
 def main() -> None:
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description="FlowGen 0.5b — Multi-agent code generation experiment runner"
+        description="FlowGen — Multi-agent code generation experiment runner"
     )
     parser.add_argument(
         "--config",

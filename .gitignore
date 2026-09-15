@@ -24,3 +24,6 @@ results/
 # Testing and Coverage
 .coverage
 htmlcov/
+
+# Benchmarks
+human-eval/

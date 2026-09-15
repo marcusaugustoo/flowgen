@@ -1,5 +1,5 @@
 """
-Shared test fixtures for FlowGen 0.5b tests.
+Shared test fixtures for FlowGen tests.
 """
 
 import sys

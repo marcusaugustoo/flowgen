@@ -1,381 +1,146 @@
-# FlowGen 0.5b — Multi-Agent Code Generation Research Platform
+# FlowGen — Plataforma de Pesquisa para Geração de Código Multi-Agente
 
-Experimental research infrastructure for investigating how different multi-agent configurations and local LLM models affect code generation quality. Inspired by the FlowGen paper (SOEN-101, ICSE 2025).
+Infraestrutura de pesquisa experimental projetada para avaliar como diferentes configurações de sistemas multi-agentes e modelos SLM (Small Language Models) locais afetam a qualidade do código gerado. Inspirada na metodologia apresentada no artigo FlowGen (SOEN-101, ICSE 2025).
 
-> **Note**: This is NOT a reproduction of the original FlowGen codebase. It is an independent experimental implementation inspired by the methodology described in the paper.
+> **Aviso**: Esta não é uma reprodução do código original do FlowGen. Trata-se de uma implementação experimental independente para rodar benchmarks de SLMs, inspirada nos conceitos do artigo.
 
-## Quick Start
+## 🚀 Começando
 
 ```bash
-# 1. Clone and setup
-cd FlowGen_0.5b
+# 1. Clone o repositório e configure o ambiente
+cd flowgen
 python3 -m venv .venv
 source .venv/bin/activate
 pip install pyyaml requests pytest
 
-# 2. Run tests (no Ollama needed)
+# 2. Rode os testes (sem necessidade do Ollama)
 python -m pytest tests/ -v
 
-# 3. Run Raw baseline (requires Ollama)
+# 3. Rode o baseline Raw (necessita Ollama configurado)
 ollama pull qwen2.5-coder:7b
 python -m src.main --config config/experiments/raw_baseline.yaml
 
-# 4. Run Waterfall baseline
+# 4. Rode o baseline Waterfall
 python -m src.main --config config/experiments/waterfall_baseline.yaml
 ```
 
-## Architecture
+## 🏗️ Arquitetura do Projeto
 
 ```
 flowgen-experiment/
-├── config/                    # YAML configuration files
-│   ├── default.yaml           # Default parameters
-│   └── experiments/           # Per-experiment overrides
+├── config/                    # Arquivos de configuração YAML
 ├── src/
-│   ├── agents/                # Agent implementations
-│   │   ├── base_agent.py      # BaseAgent ABC
-│   │   ├── requirement_engineer.py
-│   │   ├── architect.py
-│   │   ├── developer.py
-│   │   ├── tester.py
-│   │   └── scrum_master.py
-│   ├── llm/                   # LLM provider abstraction
-│   │   ├── base.py            # BaseLLMProvider ABC
-│   │   ├── ollama_provider.py # Ollama REST API
-│   │   ├── mock_provider.py   # Testing mock
-│   │   └── factory.py         # Provider factory
-│   ├── processes/             # Process models
-│   │   ├── base.py            # BaseProcess ABC
-│   │   ├── raw.py             # Single LLM call (Baseline A)
-│   │   ├── waterfall.py       # Sequential agents (Baseline B)
-│   │   ├── tdd.py             # Test-driven (Baseline C, stub)
-│   │   └── scrum.py           # Sprint-based (Baseline D, stub)
-│   ├── orchestration/         # Agent coordination
-│   │   ├── orchestrator.py    # Central execution control
-│   │   ├── context.py         # SharedContext
-│   │   ├── messages.py        # Inter-agent messages
-│   │   └── artifacts.py       # Structured artifact storage
-│   ├── refinement/            # Self-refinement strategies
-│   ├── benchmarks/            # Benchmark loaders (HumanEval)
-│   ├── evaluation/            # Test execution & Pass@1
-│   ├── results/               # Result persistence & reports
-│   └── main.py                # CLI entry point
-├── tests/                     # Unit tests (106 tests)
-├── datasets/                  # Benchmark data (mini HumanEval)
-└── docs/                      # Documentation
+│   ├── agents/                # Implementação dos Agentes (Engenheiro de Requisitos, Arquiteto, etc.)
+│   ├── llm/                   # Abstração do provedor LLM (Ollama, etc.)
+│   ├── processes/             # Modelos de processos (Raw, Waterfall, TDD, Scrum)
+│   ├── orchestration/         # Coordenação dos agentes e armazenamento de artefatos
+│   ├── refinement/            # Estratégias de auto-refinamento
+│   ├── benchmarks/            # Carregadores de benchmarks (ex: HumanEval)
+│   ├── evaluation/            # Execução de testes e cálculo do Pass@1
+│   ├── results/               # Armazenamento e relatórios de resultados
+│   └── main.py                # Ponto de entrada CLI
+├── tests/                     # Testes unitários do framework
+├── datasets/                  # Dados de benchmark (ex: mini HumanEval)
+└── docs/                      # Documentação extra
 ```
 
-## Key Design Principles
+## 🧠 Princípios de Design
 
-1. **Configuration-driven**: All experimental parameters live in YAML files
-2. **Agents are decoupled**: Agents don't know which process model runs them
-3. **LLM is abstracted**: Swap models by changing one config line
-4. **Orchestrator controls flow**: Agents never call other agents directly
-5. **Everything is logged**: Full traceability of prompts, responses, messages
-6. **Never overwrite**: Each experiment gets a unique ID (EXP-NNN)
+1. **Baseado em Configuração**: Todos os parâmetros experimentais ficam em arquivos YAML.
+2. **Agentes Desacoplados**: Os agentes operam sem saber qual modelo de processo os está executando.
+3. **LLM Abstraído**: A troca de modelos é feita alterando apenas uma linha na configuração.
+4. **Orquestrador Central**: Os agentes não se comunicam diretamente entre si, apenas via orquestrador.
+5. **Rastreabilidade**: Os logs capturam prompts, respostas e mensagens trocadas.
+6. **Dados Imutáveis**: Cada experimento recebe um ID único (`EXP-NNN`) para não sobrescrever resultados.
 
-## Configuring Experiments
+## ⚙️ Configurando Experimentos
 
-All parameters are in `config/default.yaml`. Create overrides in `config/experiments/`:
+Os parâmetros globais estão em `config/default.yaml`. Para sobrescrevê-los, crie arquivos na pasta `config/experiments/`:
 
 ```yaml
-# config/experiments/my_experiment.yaml
+# config/experiments/meu_experimento.yaml
 experiment:
-  name: my_custom_run
+  name: run_personalizada
   runs: 5
 
 llm:
   provider: ollama
-  model: deepseek-coder:6.7b   # Change model here
+  model: deepseek-coder:6.7b
   temperature: 0.8
 
 pipeline:
-  type: waterfall               # raw | waterfall | tdd | scrum
+  type: waterfall               # Opções: raw | waterfall | tdd | scrum
 
 self_refinement:
   enabled: true
   iterations: 3
 ```
 
-Run it:
+Execute o experimento customizado com:
 ```bash
-python -m src.main --config config/experiments/my_experiment.yaml
+python -m src.main --config config/experiments/meu_experimento.yaml
 ```
 
-## CLI Options
-
-```bash
-python -m src.main --config <path>       # Experiment config YAML
-python -m src.main --model <name>        # Override model
-python -m src.main --process <type>      # Override process (raw/waterfall/tdd/scrum)
-python -m src.main --runs <N>            # Override number of runs
-python -m src.main --task <path>         # Run a single .txt task file
-python -m src.main --tasks <dir>         # Run all .txt tasks in a directory
-```
-
-## Tarefas via Arquivos `.txt`
-
-A forma mais simples de usar o FlowGen é criar arquivos `.txt` com o enunciado da tarefa.
-
-### Onde criar tarefas
-
-Coloque seus arquivos na pasta `tasks/`:
-
-```
-tasks/
-├── task_001.txt
-├── task_001_test.py    ← (testes opcionais)
-├── task_002.txt
-└── task_003.txt
-```
-
-### Como escrever uma tarefa
-
-Crie um arquivo `.txt` com o enunciado em linguagem natural. Exemplo de `task_001.txt`:
-
-```
-Implemente uma função chamada is_prime que receba um número inteiro
-e retorne True caso ele seja primo e False caso contrário.
-
-A função deve funcionar corretamente para números positivos.
-Números menores ou iguais a 1 não são primos.
-
-Exemplos:
-- is_prime(2) deve retornar True
-- is_prime(4) deve retornar False
-- is_prime(17) deve retornar True
-```
-
-O arquivo contém **somente o enunciado do problema**. Modelo, temperatura, processo e outros parâmetros continuam no YAML de configuração.
-
-### Testes canônicos (opcional)
-
-Para avaliar com Pass@1, crie um arquivo de testes ao lado da tarefa com o sufixo `_test.py`:
-
-- Tarefa: `task_001.txt`
-- Testes: `task_001_test.py`
-
-Exemplo de `task_001_test.py`:
-```python
-def check(candidate):
-    assert candidate(2) == True
-    assert candidate(4) == False
-    assert candidate(17) == True
-    assert candidate(1) == False
-
-check(is_prime)
-```
-
-O framework detecta automaticamente o arquivo de testes e o usa na avaliação.
-
-### Como executar uma tarefa
+## 💻 Comandos da CLI
 
 ```bash
-# Uma tarefa específica
-python -m src.main --task tasks/task_001.txt
-
-# Todas as tarefas da pasta
-python -m src.main --tasks tasks/
-
-# Com opções de processo e modelo
-python -m src.main --tasks tasks/ --process raw --model qwen:0.5b
-python -m src.main --tasks tasks/ --process waterfall --model qwen:0.5b
+python -m src.main --config <caminho>    # Arquivo YAML de configuração
+python -m src.main --model <nome>        # Sobrescreve o modelo LLM
+python -m src.main --process <tipo>      # Sobrescreve o processo (raw/waterfall/tdd/scrum)
+python -m src.main --runs <N>            # Altera o número de repetições
+python -m src.main --task <caminho>      # Executa uma única tarefa a partir de arquivo .txt
+python -m src.main --tasks <diretorio>   # Executa todas as tarefas .txt em um diretório
 ```
 
-### Como os resultados são armazenados
 
-Os resultados ficam em `results/EXP-NNN_<nome>/`, exatamente como com benchmarks:
+## 📊 Estrutura de Resultados
+
+Os resultados são gravados na pasta `results/` no formato `EXP-NNN_<nome>/`:
 
 ```
 results/EXP-007_flowgen_baseline/
-├── config.yaml          # Configuração usada
-├── summary.json         # Métricas agregadas
-├── report.md            # Tabela de resultados
+├── config.yaml          # Configuração exata utilizada
+├── summary.json         # Métricas agregadas (ex: cálculo final de Pass@1)
+├── report.md            # Relatório em formato de tabela Markdown
 └── runs/
     └── run_001/
-        ├── results.json # Resultado por tarefa (passed/failed + prompt)
+        ├── results.json # Resultado por tarefa (aprovado/reprovado + código gerado)
         ├── messages.jsonl
         └── artifacts/
 ```
 
-### Como o Pass@1 é calculado
+**Cálculo do Pass@1**: Representa a taxa de sucesso da primeira resposta gerada sem modificações pelo usuário, podendo ser calculada a média ao executar múltiplos *runs* (`--runs N`).
 
-Para cada tarefa, o processo gera **uma** solução candidata. Essa solução é executada contra os testes da tarefa. O resultado é `passed = true` ou `passed = false`.
+## 🤖 Modelos de Processos Suportados
 
-```
-Pass@1 = tarefas que passaram / total de tarefas
+| Processo     | Descrição                                         | Status                 |
+|--------------|---------------------------------------------------|------------------------|
+| `raw`        | Chamada única ao LLM (Baseline A)                 | ✅ Implementado         |
+| `waterfall`  | Engenheiro → Arquiteto → Dev → QA (Baseline B)    | ✅ Implementado         |
+| `tdd`        | Desenvolvimento Orientado a Testes (Baseline C)   | 🏗️ Arquitetura Pronta |
+| `scrum`      | Ciclos de Sprint com Scrum Master (Baseline D)    | 🏗️ Arquitetura Pronta |
 
-Exemplo: 3 tarefas, 2 passaram → Pass@1 = 2/3 = 0.6667 = 66.67%
-```
+### Fluxo dos Agentes (Waterfall)
+1. **Engenheiro de Requisitos**: Analisa e extrai requisitos do problema.
+2. **Arquiteto**: Projeta a solução e os algoritmos.
+3. **Desenvolvedor**: Implementa o código Python.
+4. **Tester (QA)**: Gera os casos de teste correspondentes.
+5. **Auto-Refinamento**: Caso ativado e haja falhas nos testes em sandbox, o código volta ao Desenvolvedor para correção iterativa.
 
-Quando há múltiplas execuções (`--runs 5`), cada run produz seu próprio Pass@1. O sistema calcula a média e o desvio padrão entre os runs.
+## 🦙 Configurando o Ollama
 
-## Changing the Model
-
-Edit the YAML config:
-```yaml
-llm:
-  provider: ollama
-  model: qwen2.5-coder:7b       # ← change this
-```
-
-Or via CLI:
+O FlowGen utiliza modelos locais via Ollama:
 ```bash
-python -m src.main --model llama3.1:8b
-python -m src.main --model deepseek-coder:6.7b
-python -m src.main --model mistral:7b
-```
-
-No code changes needed.
-
-## Process Models
-
-| Process    | Description | Status |
-|------------|-------------|--------|
-| `raw`      | Single LLM call (Baseline A) | ✅ Implemented |
-| `waterfall`| RE → Arch → Dev → Test → Refine (Baseline B) | ✅ Implemented |
-| `tdd`      | Tests-first development (Baseline C) | 🏗️ Architecture ready |
-| `scrum`    | Sprint-based with Scrum Master (Baseline D) | 🏗️ Architecture ready |
-
-## Agent Pipeline (Waterfall)
-
-```
-Problem
-  → Requirement Engineer (analyzes, extracts requirements)
-  → Architect (designs solution, algorithm)
-  → Developer (implements Python code)
-  → Tester (generates test cases)
-  → Test Execution (sandboxed subprocess)
-  → [If failures + refinement enabled]:
-      → Developer refinement (fixes based on failure report)
-      → Test Execution
-      → Repeat up to N iterations
-  → Evaluation (Pass@1 against benchmark tests)
-```
-
-## Results Structure
-
-```
-results/
-└── EXP-001_waterfall_baseline/
-    ├── config.yaml          # Exact config used
-    ├── summary.json         # Aggregated metrics
-    ├── report.md            # Markdown results table
-    ├── runs/
-    │   ├── run_001/
-    │   │   ├── results.json # Per-problem pass/fail
-    │   │   ├── messages.jsonl
-    │   │   └── artifacts/
-    │   └── run_002/
-    ├── logs/
-    └── artifacts/
-```
-
-## Adding a New Agent
-
-1. Create `src/agents/my_agent.py`:
-```python
-from src.agents.base_agent import BaseAgent
-from src.llm.base import LLMResponse
-from src.orchestration.artifacts import Artifact
-from src.orchestration.context import SharedContext
-
-class MyAgent(BaseAgent):
-    agent_name = "my_agent"
-    agent_role = "My Custom Role"
-    artifact_type = "my_output"
-
-    def parse_response(self, response, context):
-        return Artifact(type=self.artifact_type, content=response.content, created_by=self.agent_name)
-
-    def update_context(self, context, artifact):
-        context.metadata["my_output"] = artifact.content
-```
-
-2. Create prompt template: `src/prompts/my_agent/system.txt`
-
-3. Register in `src/agents/factory.py`:
-```python
-_AGENT_REGISTRY["my_agent"] = "src.agents.my_agent.MyAgent"
-```
-
-4. Add to config:
-```yaml
-agents:
-  my_agent: true
-```
-
-## Adding a New Process Model
-
-1. Create `src/processes/my_process.py` extending `BaseProcess`
-2. Implement `run(context, orchestrator) -> SharedContext`
-3. Register in `src/processes/factory.py`
-4. Use via config: `pipeline: { type: my_process }`
-
-## Benchmarks
-
-| Benchmark    | Problems | Status |
-|-------------|----------|--------|
-| HumanEval   | 164      | ✅ Loader ready (mini: 5 problems) |
-| MBPP        | 427      | 🏗️ Loader prepared |
-| HumanEval-ET| 164      | 🏗️ Loader prepared |
-| MBPP-ET     | 427      | 🏗️ Loader prepared |
-
-For the full HumanEval dataset, download and set `benchmark.dataset_path`:
-```yaml
-benchmark:
-  name: humaneval
-  dataset_path: datasets/HumanEval.jsonl
-```
-
-## Ollama Setup
-
-```bash
-# Install Ollama
+# Instalar Ollama (Linux/Mac)
 curl -fsSL https://ollama.com/install.sh | sh
 
-# Start the service
-ollama serve
-
-# Pull a model
+# Baixar um modelo de programação (SLM)
 ollama pull qwen2.5-coder:7b
 
-# Verify
-curl http://localhost:11434/api/tags
+# Iniciar o servidor (caso já não esteja rodando)
+ollama serve
 ```
 
-## Running Tests
 
-```bash
-# All tests (no Ollama needed — uses MockProvider)
-python -m pytest tests/ -v
-
-# Specific module
-python -m pytest tests/test_evaluator.py -v
-
-# With coverage
-python -m pytest tests/ --cov=src --cov-report=term-missing
-```
-
-## Ablation Studies
-
-The architecture supports ablation by toggling agents in config:
-
-```yaml
-# Full system
-agents: { requirement_engineer: true, architect: true, developer: true, tester: true }
-
-# Without Architect
-agents: { requirement_engineer: true, architect: false, developer: true, tester: true }
-
-# Without Tester (no refinement)
-agents: { requirement_engineer: true, architect: true, developer: true, tester: false }
-```
-
-## License
-
-MIT — For academic research purposes.
-
-## References
-
+## 📚 Referências
 - Lin, F., Kim, D.J., & Chen, T.H. (2025). *SOEN-101: Code Generation by Emulating Software Process Models Using Large Language Model Agents*. ICSE 2025.

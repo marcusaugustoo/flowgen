@@ -1,5 +1,5 @@
 experiment:
-  name: humaneval_qwen25coder_14b_waterfall
+  name: humaneval_qwen25coder_14b_raw
   seed: 42           # null = no seed control; set integer for reproducibility
   runs: 1               # Number of repeated runs per problem
 
@@ -13,11 +13,11 @@ llm:
 
 benchmark:
   name: humaneval       # humaneval | mbpp | humaneval_et | mbpp_et
-  dataset_path: null    # null = use built-in mini dataset; or path to .jsonl
-  subset: [0, 1, 2, 3, 4]         # null = all problems; or list of task_ids e.g. [0, 1, 2]
+  dataset_path: human-eval/data/HumanEval.jsonl    # null = use built-in mini dataset; or path to .jsonl
+  subset: null         # null = all problems; or list of task_ids e.g. [0, 1, 2]
 
 pipeline:
-  type: waterfall     # raw | waterfall | tdd | scrum
+  type: raw     # raw | waterfall | tdd | scrum
 
 agents:
   requirement_engineer: true

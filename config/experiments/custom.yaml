@@ -4,7 +4,7 @@ experiment:
 
 llm:
   provider: ollama
-  model: qwen:0.5b
+  model: qwen2.5-coder:7b
 
 benchmark:
   name: humaneval
